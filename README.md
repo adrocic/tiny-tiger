@@ -1,5 +1,7 @@
 # tiny-tiger
 
+<img width="273" height="299" alt="image" src="https://github.com/user-attachments/assets/f6c15892-071d-427d-ac99-e0a63119cdd0" />
+
 A tiny 2D game engine written in C++, compiled to WebAssembly via [Emscripten](https://emscripten.org), and usable directly from JavaScript in the browser.
 
 Built as a portfolio/learning project with GitHub Copilot assistance. The goal is clean, readable C++ — not overly complex, but not sloppy either.
