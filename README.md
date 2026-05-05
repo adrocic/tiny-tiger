@@ -99,7 +99,7 @@ powershellfunction Invoke-BatchFile {
 }
 
 function Enable-Emscripten {
-    Invoke-BatchFile "E:\Code\emsdk\emsdk_env.bat"
+    Invoke-BatchFile "E:\Code\emsdk\emsdk_env.bat OR WHEREVER YOU INSTALLED EMSDK"
     Write-Host "Emscripten activated." -ForegroundColor Green
 }
 ```
