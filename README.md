@@ -1,1 +1,134 @@
 # tiny-tiger
+
+A tiny 2D game engine written in C++, compiled to WebAssembly via [Emscripten](https://emscripten.org), and usable from JavaScript in the browser.
+
+## Building
+
+Install Emscripten first: https://emscripten.org/docs/getting_started/downloads.html
+
+Then build with:
+
+```sh
+make
+```
+
+This compiles the engine to `dist/tiny_tiger.js` and `dist/tiny_tiger.wasm`.
+
+## Running the Demo
+
+After building, serve the project root with a local web server (required because browsers block loading
+WebAssembly from `file://` URLs):
+
+```sh
+python3 -m http.server 8080
+```
+
+Open [http://localhost:8080](http://localhost:8080) in your browser and you will see an interactive demo:
+
+- **Arrow Keys** or **WASD** — move the red player square
+- **Left Click** on the canvas — move the green target circle
+- **Space** — hold to make the player pulse
+
+## JavaScript API
+
+### `Module.Color(red, green, blue [, alpha])`
+
+Represents an RGBA color. `alpha` defaults to `255` (fully opaque).
+
+```js
+const red   = new Module.Color(255, 0, 0);
+const glass = new Module.Color(0, 128, 255, 128);
+```
+
+### `Module.Vector2(x, y)`
+
+A 2D vector with arithmetic helpers.
+
+```js
+const position = new Module.Vector2(100, 200);
+const velocity = new Module.Vector2(50, 0);
+const nextPosition = position.add(velocity.scale(deltaTimeInSeconds));
+console.log(nextPosition.xPosition, nextPosition.yPosition);
+console.log(nextPosition.getLength());
+```
+
+### `Module.Engine(canvasWidth, canvasHeight)`
+
+The main engine object. Creates and sizes a `<canvas id="gameCanvas">` element.
+
+```js
+Module.onRuntimeInitialized = function () {
+    const engine = new Module.Engine(800, 600);
+
+    engine.setUpdateCallback(function (deltaTimeInSeconds) {
+        // update game logic here
+    });
+
+    engine.setDrawCallback(function () {
+        // draw the frame here
+    });
+
+    engine.run();
+};
+```
+
+`engine.deltaTimeSinceLastFrame` — time in seconds between the last two frames (read inside your callbacks).
+
+`engine.stop()` — cancels the game loop.
+
+### `Renderer` — obtained via `engine.getRenderer()`
+
+| Method | Description |
+|--------|-------------|
+| `clearScreen(color)` | Fill the whole canvas with a color |
+| `drawFilledRectangle(x, y, width, height, color)` | Filled rectangle |
+| `drawOutlinedRectangle(x, y, width, height, color, thickness)` | Rectangle outline |
+| `drawFilledCircle(cx, cy, radius, color)` | Filled circle |
+| `drawOutlinedCircle(cx, cy, radius, color, thickness)` | Circle outline |
+| `drawLine(x1, y1, x2, y2, color, thickness)` | Line segment |
+| `drawTextString(text, x, y, fontSize, color)` | Text using `sans-serif` |
+| `beginPathDrawing()` | Start a custom path |
+| `movePathTo(x, y)` | Move path cursor without drawing |
+| `drawLineTo(x, y)` | Extend path with a line |
+| `strokeCurrentPath(color, thickness)` | Stroke the current path |
+| `fillCurrentPath(color)` | Fill the current path |
+| `saveDrawingState()` | Push canvas state |
+| `restoreDrawingState()` | Pop canvas state |
+| `applyTranslation(x, y)` | Translate the canvas transform |
+| `applyRotation(angleInRadians)` | Rotate the canvas transform |
+| `applyScaling(xScale, yScale)` | Scale the canvas transform |
+| `setGlobalAlphaValue(alpha)` | Set global opacity (0.0 – 1.0) |
+
+### `KeyboardInput` — obtained via `engine.getKeyboardInput()`
+
+```js
+const keyboard = engine.getKeyboardInput();
+keyboard.isKeyCurrentlyHeld('ArrowLeft')      // true while key is down
+keyboard.wasKeyPressedThisFrame('Space')       // true on the first frame the key goes down
+keyboard.wasKeyReleasedThisFrame('Enter')      // true on the frame the key is released
+```
+
+Key names match the standard `KeyboardEvent.key` values
+(`'ArrowLeft'`, `'ArrowRight'`, `'ArrowUp'`, `'ArrowDown'`, `' '` for Space, `'a'`–`'z'`, etc.).
+
+### `MouseInput` — obtained via `engine.getMouseInput()`
+
+```js
+const mouse = engine.getMouseInput();
+mouse.getCursorXPosition()                      // cursor X in window coordinates
+mouse.getCursorYPosition()                      // cursor Y in window coordinates
+mouse.isMouseButtonHeld(0)                      // 0 = left, 1 = middle, 2 = right
+mouse.wasMouseButtonPressedThisFrame(0)
+mouse.wasMouseButtonReleasedThisFrame(0)
+```
+
+## Project Structure
+
+```
+src/
+  engine.h        — class declarations (Color, Vector2, Renderer, KeyboardInput, MouseInput, Engine)
+  engine.cpp      — implementation (EM_JS canvas calls, Emscripten HTML5 input callbacks)
+  bindings.cpp    — EMSCRIPTEN_BINDINGS block that exposes classes to JavaScript
+index.html        — browser demo
+Makefile          — build rules (requires emcc)
+```

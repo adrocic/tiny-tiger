@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tiny Tiger - 2D Game Engine Demo</title>
+    <style>
+        body {
+            background-color: #0f0f28;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            color: #ffffff;
+        }
+
+        h1 {
+            margin-bottom: 16px;
+            font-size: 2rem;
+            letter-spacing: 2px;
+        }
+
+        #gameCanvas {
+            border: 3px solid #e94560;
+            display: block;
+        }
+
+        #instructions-panel {
+            margin-top: 20px;
+            text-align: center;
+            color: #aaaacc;
+            line-height: 1.8;
+        }
+
+        #instructions-panel strong {
+            color: #e94560;
+        }
+    </style>
+</head>
+<body>
+    <h1>&#x1F42F; Tiny Tiger Demo</h1>
+    <canvas id="gameCanvas"></canvas>
+    <div id="instructions-panel">
+        <p>Move the red square with <strong>Arrow Keys</strong> or <strong>WASD</strong></p>
+        <p>Left-click anywhere on the canvas to move the green target circle</p>
+        <p>Hold <strong>Left Mouse Button</strong> to turn the player orange &nbsp;|&nbsp; Hold <strong>Space</strong> to pulse</p>
+    </div>
+
+    <script src="dist/tiny_tiger.js"></script>
+    <script>
+        Module.onRuntimeInitialized = function () {
+
+            const canvasWidthInPixels = 800;
+            const canvasHeightInPixels = 600;
+
+            const engineInstance = new Module.Engine(canvasWidthInPixels, canvasHeightInPixels);
+            const rendererReference = engineInstance.getRenderer();
+            const keyboardInputReference = engineInstance.getKeyboardInput();
+            const mouseInputReference = engineInstance.getMouseInput();
+
+            const playerWidthInPixels = 50;
+            const playerHeightInPixels = 50;
+            const playerMovementSpeedInPixelsPerSecond = 220;
+
+            let playerXPosition = (canvasWidthInPixels / 2) - (playerWidthInPixels / 2);
+            let playerYPosition = (canvasHeightInPixels / 2) - (playerHeightInPixels / 2);
+
+            let targetCircleXPosition = 150;
+            let targetCircleYPosition = 150;
+            const targetCircleRadius = 28;
+
+            let playerPulseTimer = 0;
+
+            const darkBackgroundColor = new Module.Color(15, 15, 40);
+            const playerFillColor = new Module.Color(233, 69, 96);
+            const playerBorderColor = new Module.Color(255, 150, 165);
+            const targetFillColor = new Module.Color(80, 200, 120);
+            const targetBorderColor = new Module.Color(200, 255, 220);
+            const whiteColor = new Module.Color(255, 255, 255);
+            const yellowColor = new Module.Color(255, 220, 80);
+            const labelTextColor = new Module.Color(180, 180, 220);
+
+            engineInstance.setUpdateCallback(function (deltaTimeInSeconds) {
+
+                const movementDistanceThisFrame = playerMovementSpeedInPixelsPerSecond * deltaTimeInSeconds;
+
+                const isMovingLeft = keyboardInputReference.isKeyCurrentlyHeld('ArrowLeft') ||
+                                     keyboardInputReference.isKeyCurrentlyHeld('a');
+                const isMovingRight = keyboardInputReference.isKeyCurrentlyHeld('ArrowRight') ||
+                                      keyboardInputReference.isKeyCurrentlyHeld('d');
+                const isMovingUp = keyboardInputReference.isKeyCurrentlyHeld('ArrowUp') ||
+                                   keyboardInputReference.isKeyCurrentlyHeld('w');
+                const isMovingDown = keyboardInputReference.isKeyCurrentlyHeld('ArrowDown') ||
+                                     keyboardInputReference.isKeyCurrentlyHeld('s');
+
+                if (isMovingLeft) {
+                    playerXPosition = playerXPosition - movementDistanceThisFrame;
+                }
+                if (isMovingRight) {
+                    playerXPosition = playerXPosition + movementDistanceThisFrame;
+                }
+                if (isMovingUp) {
+                    playerYPosition = playerYPosition - movementDistanceThisFrame;
+                }
+                if (isMovingDown) {
+                    playerYPosition = playerYPosition + movementDistanceThisFrame;
+                }
+
+                if (mouseInputReference.wasMouseButtonPressedThisFrame(0)) {
+                    targetCircleXPosition = mouseInputReference.getCursorXPosition();
+                    targetCircleYPosition = mouseInputReference.getCursorYPosition();
+                }
+                const isSpaceHeld = keyboardInputReference.isKeyCurrentlyHeld(' ');
+                if (isSpaceHeld) {
+                    playerPulseTimer = playerPulseTimer + deltaTimeInSeconds * 6;
+                } else {
+                    playerPulseTimer = 0;
+                }
+
+                const leftBoundary = 0;
+                const rightBoundary = canvasWidthInPixels - playerWidthInPixels;
+                const topBoundary = 0;
+                const bottomBoundary = canvasHeightInPixels - playerHeightInPixels;
+
+                if (playerXPosition < leftBoundary) {
+                    playerXPosition = leftBoundary;
+                }
+                if (playerXPosition > rightBoundary) {
+                    playerXPosition = rightBoundary;
+                }
+                if (playerYPosition < topBoundary) {
+                    playerYPosition = topBoundary;
+                }
+                if (playerYPosition > bottomBoundary) {
+                    playerYPosition = bottomBoundary;
+                }
+            });
+
+            engineInstance.setDrawCallback(function () {
+
+                rendererReference.clearScreen(darkBackgroundColor);
+
+                rendererReference.drawFilledCircle(targetCircleXPosition, targetCircleYPosition, targetCircleRadius, targetFillColor);
+                rendererReference.drawOutlinedCircle(targetCircleXPosition, targetCircleYPosition, targetCircleRadius, targetBorderColor, 2);
+                rendererReference.drawTextString('target', targetCircleXPosition - 16, targetCircleYPosition + targetCircleRadius + 16, 14, targetBorderColor);
+
+                const pulseOffsetAmount = Math.sin(playerPulseTimer) * 8;
+                const currentPlayerWidth = playerWidthInPixels + pulseOffsetAmount;
+                const currentPlayerHeight = playerHeightInPixels + pulseOffsetAmount;
+                const adjustedPlayerX = playerXPosition - (pulseOffsetAmount / 2);
+                const adjustedPlayerY = playerYPosition - (pulseOffsetAmount / 2);
+
+                const isLeftMouseButtonHeld = mouseInputReference.isMouseButtonHeld(0);
+                const activePlayerFillColor = isLeftMouseButtonHeld
+                    ? new Module.Color(255, 160, 80)
+                    : playerFillColor;
+
+                rendererReference.drawFilledRectangle(adjustedPlayerX, adjustedPlayerY, currentPlayerWidth, currentPlayerHeight, activePlayerFillColor);
+                rendererReference.drawOutlinedRectangle(adjustedPlayerX, adjustedPlayerY, currentPlayerWidth, currentPlayerHeight, playerBorderColor, 2);
+
+                const distanceToTargetX = targetCircleXPosition - (playerXPosition + playerWidthInPixels / 2);
+                const distanceToTargetY = targetCircleYPosition - (playerYPosition + playerHeightInPixels / 2);
+                const totalDistanceToTarget = Math.sqrt(distanceToTargetX * distanceToTargetX + distanceToTargetY * distanceToTargetY);
+
+                if (totalDistanceToTarget < 200) {
+                    const playerCenterX = playerXPosition + playerWidthInPixels / 2;
+                    const playerCenterY = playerYPosition + playerHeightInPixels / 2;
+                    rendererReference.drawLine(playerCenterX, playerCenterY, targetCircleXPosition, targetCircleYPosition, yellowColor, 1);
+                }
+
+                const currentFramesPerSecond = engineInstance.deltaTimeSinceLastFrame > 0
+                    ? Math.round(1.0 / engineInstance.deltaTimeSinceLastFrame)
+                    : 0;
+
+                rendererReference.drawTextString('Tiny Tiger Engine', 10, 28, 22, whiteColor);
+                rendererReference.drawTextString('FPS: ' + currentFramesPerSecond, 10, 54, 16, labelTextColor);
+                rendererReference.drawTextString('Player: (' + Math.round(playerXPosition) + ', ' + Math.round(playerYPosition) + ')', 10, 74, 16, labelTextColor);
+
+                const distanceDisplayValue = Math.round(totalDistanceToTarget);
+                rendererReference.drawTextString('Distance to target: ' + distanceDisplayValue, 10, 94, 16, labelTextColor);
+            });
+
+            engineInstance.run();
+        };
+    </script>
+</body>
+</html>
