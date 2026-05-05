@@ -1,33 +1,81 @@
 # tiny-tiger
 
-A tiny 2D game engine written in C++, compiled to WebAssembly via [Emscripten](https://emscripten.org), and usable from JavaScript in the browser.
+A tiny 2D game engine written in C++, compiled to WebAssembly via [Emscripten](https://emscripten.org), and usable directly from JavaScript in the browser.
 
-## Building
+Built as a portfolio/learning project with GitHub Copilot assistance. The goal is clean, readable C++ — not overly complex, but not sloppy either.
+
+---
+
+## What it does
+
+The engine runs all game logic in C++ (compiled to WASM) and lets JavaScript handle rendering via the HTML5 Canvas API. This mirrors how real-world engines like Figma's core work.
+
+**C++ / WASM side:**
+- `Color` — RGBA color value
+- `Vector2` — 2D vector math (add, subtract, scale, length)
+- `Renderer` — Draws shapes, text, and paths to the HTML5 Canvas
+- `KeyboardInput` — Tracks held/pressed/released keys each frame
+- `MouseInput` — Canvas-relative cursor position and mouse button state
+- `Engine` — Owns all subsystems, runs the game loop, accepts JS update and draw callbacks
+
+**JavaScript side:**
+- Loads the compiled `.wasm` module via `Module.onRuntimeInitialized`
+- Provides update and draw callbacks to the engine
+- Reads input through `KeyboardInput` and `MouseInput`
+
+---
+
+## Tech stack
+
+| Tool | Purpose |
+|---|---|
+| C++17 | Core engine logic |
+| Emscripten | Compiles C++ → WebAssembly |
+| make | Build system |
+| HTML5 Canvas | Rendering |
+
+---
+
+## Project structure
+
+```
+tiny-tiger/
+├── src/
+│   ├── engine.h        — class declarations (Color, Vector2, Renderer, KeyboardInput, MouseInput, Engine)
+│   ├── engine.cpp      — implementation (EM_JS canvas calls, Emscripten HTML5 input callbacks)
+│   └── bindings.cpp    — EMSCRIPTEN_BINDINGS block that exposes classes to JavaScript
+├── index.html          — browser demo
+└── Makefile            — build rules (requires emcc)
+```
+
+---
+
+## Getting started
 
 Install Emscripten first: https://emscripten.org/docs/getting_started/downloads.html
 
-Then build with:
-
-```sh
+```bash
+# Build the WASM module
 make
-```
 
-This compiles the engine to `dist/tiny_tiger.js` and `dist/tiny_tiger.wasm`.
-
-## Running the Demo
-
-After building, serve the project root with a local web server (required because browsers block loading
-WebAssembly from `file://` URLs):
-
-```sh
+# Serve the project (required — browsers block WASM from file:// URLs)
 python3 -m http.server 8080
 ```
 
-Open [http://localhost:8080](http://localhost:8080) in your browser and you will see an interactive demo:
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+---
+
+## Demo
+
+The included `index.html` is an interactive demo:
 
 - **Arrow Keys** or **WASD** — move the red player square
 - **Left Click** on the canvas — move the green target circle
-- **Space** — hold to make the player pulse
+- **Left Mouse Button** (hold) — turns the player orange
+- **Space** (hold) — makes the player pulse
+
+---
 
 ## JavaScript API
 
@@ -115,20 +163,22 @@ Key names match the standard `KeyboardEvent.key` values
 
 ```js
 const mouse = engine.getMouseInput();
-mouse.getCursorXPosition()                      // cursor X in window coordinates
-mouse.getCursorYPosition()                      // cursor Y in window coordinates
+mouse.getCursorXPosition()                      // cursor X relative to canvas
+mouse.getCursorYPosition()                      // cursor Y relative to canvas
 mouse.isMouseButtonHeld(0)                      // 0 = left, 1 = middle, 2 = right
 mouse.wasMouseButtonPressedThisFrame(0)
 mouse.wasMouseButtonReleasedThisFrame(0)
 ```
 
-## Project Structure
+---
 
-```
-src/
-  engine.h        — class declarations (Color, Vector2, Renderer, KeyboardInput, MouseInput, Engine)
-  engine.cpp      — implementation (EM_JS canvas calls, Emscripten HTML5 input callbacks)
-  bindings.cpp    — EMSCRIPTEN_BINDINGS block that exposes classes to JavaScript
-index.html        — browser demo
-Makefile          — build rules (requires emcc)
-```
+## Goals
+
+- Learn C++ fundamentals through a real, usable project
+- Understand how WebAssembly bridges C++ and JavaScript
+
+---
+
+## License
+
+MIT
