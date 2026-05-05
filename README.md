@@ -56,6 +56,35 @@ tiny-tiger/
 
 Install Emscripten first: https://emscripten.org/docs/getting_started/downloads.html
 
+Emscripten Setup
+Emscripten is installed via emsdk but not added to system/user environment variables permanently, to avoid conflicts with NVM and system Python.
+Instead, activate it on demand per terminal session.
+Activation
+Add the following to your PowerShell profile (notepad $PROFILE):
+```
+powershellfunction Invoke-BatchFile {
+    param([string]$Path)
+    $tempFile = [IO.Path]::GetTempFileName()
+    cmd /c "`"$Path`" && set > `"$tempFile`""
+    Get-Content $tempFile | ForEach-Object {
+        if ($_ -match "^([^=]+)=(.*)$") {
+            [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+        }
+    }
+    Remove-Item $tempFile
+}
+
+function Enable-Emscripten {
+    Invoke-BatchFile "E:\Code\emsdk\emsdk_env.bat"
+    Write-Host "Emscripten activated." -ForegroundColor Green
+}
+```
+Then run this in any terminal session where you need Emscripten:
+`powershellEnable-Emscripten`
+The environment (emcc, em++, etc.) is active for that session only and resets when the terminal is closed.
+
+After that...
+
 ```bash
 # Build the WASM module
 make
