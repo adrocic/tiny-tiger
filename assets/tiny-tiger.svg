@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 225 265">
+  <defs>
+    <style>
+      /* Eye blink – CSS is reliable with transform-box: fill-box */
+      .eye-l, .eye-r {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: blink 3.5s ease-in-out infinite;
+      }
+      .eye-r { animation-delay: 0.06s; }
+      @keyframes blink {
+        0%, 88%, 100% { transform: scaleY(1); }
+        92%           { transform: scaleY(0.08); }
+        96%           { transform: scaleY(1); }
+      }
+    </style>
+  </defs>
+
+  <!-- ── static ground shadow ───────────────────────────────────── -->
+  <ellipse cx="97" cy="256" rx="60" ry="7" fill="black" fill-opacity="0.12"/>
+
+  <!-- ── full character group – idle bob via SMIL translate ──────── -->
+  <g id="char">
+    <animateTransform
+      attributeName="transform" type="translate"
+      values="0,0; 0,-6; 0,0"
+      dur="1.2s" repeatCount="indefinite"
+      calcMode="spline"
+      keySplines="0.45 0.05 0.55 0.95; 0.45 0.05 0.55 0.95"/>
+
+    <!-- ── TAIL (drawn first → behind body) ────────────────────── -->
+    <g>
+      <path d="M166,185 Q196,160 202,130 Q206,107 195,94"
+            fill="none" stroke="#2288cc" stroke-width="12" stroke-linecap="round"/>
+      <!-- orange tuft at tip -->
+      <circle cx="195" cy="91" r="12" fill="#ff8800"/>
+      <!-- tail wag – SMIL rotate keeps pivot in SVG user-unit space -->
+      <animateTransform
+        attributeName="transform" type="rotate"
+        values="-18 166 185; 18 166 185; -18 166 185"
+        dur="0.8s" repeatCount="indefinite"
+        calcMode="spline"
+        keySplines="0.45 0.05 0.55 0.95; 0.45 0.05 0.55 0.95"/>
+    </g>
+
+    <!-- ── feet / shoes ────────────────────────────────────────── -->
+    <ellipse cx="73" cy="250" rx="20" ry="9"  fill="#1155aa"/>
+    <ellipse cx="119" cy="250" rx="20" ry="9" fill="#1155aa"/>
+
+    <!-- ── legs ─────────────────────────────────────────────────── -->
+    <rect x="61"  y="208" width="25" height="44" rx="12" fill="#2288cc"/>
+    <rect x="106" y="208" width="25" height="44" rx="12" fill="#2288cc"/>
+
+    <!-- ── shorts ────────────────────────────────────────────────── -->
+    <rect x="45" y="182" width="102" height="36" rx="16" fill="#cc1a00"/>
+    <!-- shorts stripe detail -->
+    <rect x="45" y="193" width="102" height="8" rx="3"
+          fill="#aa1400" fill-opacity="0.45"/>
+
+    <!-- ── left arm + fist ────────────────────────────────────── -->
+    <ellipse cx="33" cy="170" rx="17" ry="32" fill="#2288cc"
+             transform="rotate(-14 33 148)"/>
+    <circle cx="22" cy="200" r="16" fill="#2288cc"/>
+
+    <!-- ── right arm + fist ───────────────────────────────────── -->
+    <ellipse cx="157" cy="170" rx="17" ry="32" fill="#2288cc"
+             transform="rotate(14 157 148)"/>
+    <circle cx="168" cy="200" r="16" fill="#2288cc"/>
+
+    <!-- ── torso ──────────────────────────────────────────────── -->
+    <rect x="53" y="138" width="86" height="70" rx="22" fill="#2288cc"/>
+    <!-- vertical stripes -->
+    <rect x="70"  y="147" width="9" height="52" rx="4.5"
+          fill="#1166aa" fill-opacity="0.45"/>
+    <rect x="113" y="147" width="9" height="52" rx="4.5"
+          fill="#1166aa" fill-opacity="0.45"/>
+    <!-- chest highlight -->
+    <ellipse cx="96" cy="163" rx="24" ry="26"
+             fill="#55aaee" fill-opacity="0.22"/>
+
+    <!-- ── head (big round) ───────────────────────────────────── -->
+    <circle cx="96" cy="84" r="48" fill="#2288cc"/>
+
+    <!-- ears -->
+    <polygon points="52,68 36,32 68,52" fill="#2288cc"/>
+    <polygon points="54,65 42,36 66,51" fill="#ffaacc" fill-opacity="0.5"/>
+    <polygon points="140,68 156,32 124,52" fill="#2288cc"/>
+    <polygon points="138,65 152,36 126,51" fill="#ffaacc" fill-opacity="0.5"/>
+
+    <!-- head stripes -->
+    <path d="M50,72 Q46,55 52,40" stroke="#1166aa" stroke-width="5"
+          fill="none" stroke-linecap="round" stroke-opacity="0.4"/>
+    <path d="M142,72 Q146,55 140,40" stroke="#1166aa" stroke-width="5"
+          fill="none" stroke-linecap="round" stroke-opacity="0.4"/>
+
+    <!-- ── mohawk (three orange spikes) ──────────────────────── -->
+    <polygon points="80,42 86,14 92,42"  fill="#ff8800"/>
+    <polygon points="89,38 96,8 103,38"  fill="#ffaa00"/>
+    <polygon points="100,42 106,14 112,42" fill="#ff8800"/>
+    <!-- inner highlight on centre spike -->
+    <polygon points="90,38 96,16 102,38" fill="#ffcc00" fill-opacity="0.45"/>
+
+    <!-- ── left eye ───────────────────────────────────────────── -->
+    <g class="eye-l">
+      <ellipse cx="77" cy="88" rx="14" ry="13" fill="white"/>
+      <circle  cx="79" cy="90" r="8"            fill="#001133"/>
+      <circle  cx="76" cy="87" r="3"            fill="white"/>
+    </g>
+
+    <!-- ── right eye ──────────────────────────────────────────── -->
+    <g class="eye-r">
+      <ellipse cx="115" cy="88" rx="14" ry="13" fill="white"/>
+      <circle  cx="117" cy="90" r="8"            fill="#001133"/>
+      <circle  cx="114" cy="87" r="3"            fill="white"/>
+    </g>
+
+    <!-- eyebrows (angry / determined) -->
+    <path d="M64,75 Q77,67 90,73" stroke="#1a3355" stroke-width="4.5"
+          fill="none" stroke-linecap="round"/>
+    <path d="M102,73 Q115,67 128,75" stroke="#1a3355" stroke-width="4.5"
+          fill="none" stroke-linecap="round"/>
+
+    <!-- muzzle lighter patch -->
+    <ellipse cx="96" cy="107" rx="24" ry="16"
+             fill="#55aaee" fill-opacity="0.35"/>
+
+    <!-- nose -->
+    <ellipse cx="96" cy="103" rx="10" ry="7" fill="#1a3355"/>
+    <ellipse cx="94" cy="101" rx="3.5" ry="2"
+             fill="#334466" fill-opacity="0.4"/>
+
+    <!-- ── big grin with fangs ────────────────────────────────── -->
+    <path d="M75,117 Q96,132 117,117" stroke="#1a3355" stroke-width="3"
+          fill="none" stroke-linecap="round"/>
+    <!-- flat teeth -->
+    <rect x="82" y="117" width="13" height="11" rx="3" fill="white"/>
+    <rect x="97" y="117" width="13" height="11" rx="3" fill="white"/>
+    <!-- fangs -->
+    <polygon points="78,117 82,130 86,117"  fill="white"/>
+    <polygon points="106,117 110,130 114,117" fill="white"/>
+
+    <!-- cheek whisker marks -->
+    <line x1="42"  y1="102" x2="62" y2="108" stroke="#1166aa" stroke-width="2.5"
+          stroke-linecap="round" stroke-opacity="0.35"/>
+    <line x1="42"  y1="110" x2="62" y2="114" stroke="#1166aa" stroke-width="2.5"
+          stroke-linecap="round" stroke-opacity="0.35"/>
+    <line x1="130" y1="108" x2="150" y2="102" stroke="#1166aa" stroke-width="2.5"
+          stroke-linecap="round" stroke-opacity="0.35"/>
+    <line x1="130" y1="114" x2="150" y2="110" stroke="#1166aa" stroke-width="2.5"
+          stroke-linecap="round" stroke-opacity="0.35"/>
+  </g>
+</svg>
