@@ -1,8 +1,6 @@
 # tiny-tiger
 
-# tiny-tiger
-
-A tiny 2D game engine written in C++, compiled to WebAssembly via Emscripten, and usable directly from JavaScript in the browser.
+A tiny 2D game engine written in C++, compiled to WebAssembly via [Emscripten](https://emscripten.org), and usable directly from JavaScript in the browser.
 
 Built as a portfolio/learning project with GitHub Copilot assistance. The goal is clean, readable C++ — not overly complex, but not sloppy either.
 
@@ -13,17 +11,17 @@ Built as a portfolio/learning project with GitHub Copilot assistance. The goal i
 The engine runs all game logic in C++ (compiled to WASM) and lets JavaScript handle rendering via the HTML5 Canvas API. This mirrors how real-world engines like Figma's core work.
 
 **C++ / WASM side:**
-- `Vec2` — 2D vector math (add, subtract, scale, dot product, normalize, lerp, distance)
-- `Entity` — A game object with position, velocity, and size
-- `World` — Holds all entities and runs the update loop
-- `Physics` — Applies velocity, gravity, and AABB collision detection
-- `Bindings` — Exposes the C++ API to JavaScript via Emscripten
+- `Color` — RGBA color value
+- `Vector2` — 2D vector math (add, subtract, scale, length)
+- `Renderer` — Draws shapes, text, and paths to the HTML5 Canvas
+- `KeyboardInput` — Tracks held/pressed/released keys each frame
+- `MouseInput` — Canvas-relative cursor position and mouse button state
+- `Engine` — Owns all subsystems, runs the game loop, accepts JS update and draw callbacks
 
 **JavaScript side:**
-- Loads the compiled `.wasm` module
-- Runs a `requestAnimationFrame` game loop
-- Reads entity state from WASM and draws to Canvas
-- Handles keyboard/mouse input and passes it into C++
+- Loads the compiled `.wasm` module via `Module.onRuntimeInitialized`
+- Provides update and draw callbacks to the engine
+- Reads input through `KeyboardInput` and `MouseInput`
 
 ---
 
@@ -33,8 +31,7 @@ The engine runs all game logic in C++ (compiled to WASM) and lets JavaScript han
 |---|---|
 | C++17 | Core engine logic |
 | Emscripten | Compiles C++ → WebAssembly |
-| CMake | Build system |
-| Bun | Frontend dev server |
+| make | Build system |
 | HTML5 Canvas | Rendering |
 
 ---
@@ -44,50 +41,133 @@ The engine runs all game logic in C++ (compiled to WASM) and lets JavaScript han
 ```
 tiny-tiger/
 ├── src/
-│   ├── vec2.h / vec2.cpp        # 2D vector math
-│   ├── entity.h / entity.cpp    # Game object
-│   ├── world.h / world.cpp      # Entity manager + update loop
-│   ├── physics.h / physics.cpp  # Velocity, gravity, collision
-│   └── bindings.cpp             # Emscripten JS bindings
-├── web/
-│   ├── index.html               # Entry point
-│   ├── main.js                  # Game loop + Canvas renderer
-│   └── input.js                 # Keyboard/mouse input
-├── CMakeLists.txt
-└── README.md
+│   ├── engine.h        — class declarations (Color, Vector2, Renderer, KeyboardInput, MouseInput, Engine)
+│   ├── engine.cpp      — implementation (EM_JS canvas calls, Emscripten HTML5 input callbacks)
+│   └── bindings.cpp    — EMSCRIPTEN_BINDINGS block that exposes classes to JavaScript
+├── index.html          — browser demo
+└── Makefile            — build rules (requires emcc)
 ```
-
----
-
-## Build phases
-
-- [x] Phase 1 — Environment setup (Emscripten + CMake + Bun)
-- [ ] Phase 2 — Vec2 math library
-- [ ] Phase 3 — Entity & World classes
-- [ ] Phase 4 — Physics (velocity, gravity, AABB collision)
-- [ ] Phase 5 — Emscripten bindings (C++ → JS)
-- [ ] Phase 6 — JavaScript frontend (Canvas renderer + input)
-- [ ] Phase 7 — Demo game
 
 ---
 
 ## Getting started
 
-> Full setup instructions coming soon. Requirements: Emscripten (`emsdk`), CMake, Node.js.
+Install Emscripten first: https://emscripten.org/docs/getting_started/downloads.html
 
 ```bash
-# Clone the repo
-git clone https://github.com/YOUR_USERNAME/cppge.git
-cd cppge
-
 # Build the WASM module
-emcmake cmake -B build
-cmake --build build
+make
 
-# Start the frontend
-cd web
-bun add
-bun run dev
+# Serve the project (required — browsers block WASM from file:// URLs)
+python3 -m http.server 8080
+```
+
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+---
+
+## Demo
+
+The included `index.html` is an interactive demo:
+
+- **Arrow Keys** or **WASD** — move the red player square
+- **Left Click** on the canvas — move the green target circle
+- **Left Mouse Button** (hold) — turns the player orange
+- **Space** (hold) — makes the player pulse
+
+---
+
+## JavaScript API
+
+### `Module.Color(red, green, blue [, alpha])`
+
+Represents an RGBA color. `alpha` defaults to `255` (fully opaque).
+
+```js
+const red   = new Module.Color(255, 0, 0);
+const glass = new Module.Color(0, 128, 255, 128);
+```
+
+### `Module.Vector2(x, y)`
+
+A 2D vector with arithmetic helpers.
+
+```js
+const position = new Module.Vector2(100, 200);
+const velocity = new Module.Vector2(50, 0);
+const nextPosition = position.add(velocity.scale(deltaTimeInSeconds));
+console.log(nextPosition.xPosition, nextPosition.yPosition);
+console.log(nextPosition.getLength());
+```
+
+### `Module.Engine(canvasWidth, canvasHeight)`
+
+The main engine object. Creates and sizes a `<canvas id="gameCanvas">` element.
+
+```js
+Module.onRuntimeInitialized = function () {
+    const engine = new Module.Engine(800, 600);
+
+    engine.setUpdateCallback(function (deltaTimeInSeconds) {
+        // update game logic here
+    });
+
+    engine.setDrawCallback(function () {
+        // draw the frame here
+    });
+
+    engine.run();
+};
+```
+
+`engine.deltaTimeSinceLastFrame` — time in seconds between the last two frames (read inside your callbacks).
+
+`engine.stop()` — cancels the game loop.
+
+### `Renderer` — obtained via `engine.getRenderer()`
+
+| Method | Description |
+|--------|-------------|
+| `clearScreen(color)` | Fill the whole canvas with a color |
+| `drawFilledRectangle(x, y, width, height, color)` | Filled rectangle |
+| `drawOutlinedRectangle(x, y, width, height, color, thickness)` | Rectangle outline |
+| `drawFilledCircle(cx, cy, radius, color)` | Filled circle |
+| `drawOutlinedCircle(cx, cy, radius, color, thickness)` | Circle outline |
+| `drawLine(x1, y1, x2, y2, color, thickness)` | Line segment |
+| `drawTextString(text, x, y, fontSize, color)` | Text using `sans-serif` |
+| `beginPathDrawing()` | Start a custom path |
+| `movePathTo(x, y)` | Move path cursor without drawing |
+| `drawLineTo(x, y)` | Extend path with a line |
+| `strokeCurrentPath(color, thickness)` | Stroke the current path |
+| `fillCurrentPath(color)` | Fill the current path |
+| `saveDrawingState()` | Push canvas state |
+| `restoreDrawingState()` | Pop canvas state |
+| `applyTranslation(x, y)` | Translate the canvas transform |
+| `applyRotation(angleInRadians)` | Rotate the canvas transform |
+| `applyScaling(xScale, yScale)` | Scale the canvas transform |
+| `setGlobalAlphaValue(alpha)` | Set global opacity (0.0 – 1.0) |
+
+### `KeyboardInput` — obtained via `engine.getKeyboardInput()`
+
+```js
+const keyboard = engine.getKeyboardInput();
+keyboard.isKeyCurrentlyHeld('ArrowLeft')      // true while key is down
+keyboard.wasKeyPressedThisFrame('Space')       // true on the first frame the key goes down
+keyboard.wasKeyReleasedThisFrame('Enter')      // true on the frame the key is released
+```
+
+Key names match the standard `KeyboardEvent.key` values
+(`'ArrowLeft'`, `'ArrowRight'`, `'ArrowUp'`, `'ArrowDown'`, `' '` for Space, `'a'`–`'z'`, etc.).
+
+### `MouseInput` — obtained via `engine.getMouseInput()`
+
+```js
+const mouse = engine.getMouseInput();
+mouse.getCursorXPosition()                      // cursor X relative to canvas
+mouse.getCursorYPosition()                      // cursor Y relative to canvas
+mouse.isMouseButtonHeld(0)                      // 0 = left, 1 = middle, 2 = right
+mouse.wasMouseButtonPressedThisFrame(0)
+mouse.wasMouseButtonReleasedThisFrame(0)
 ```
 
 ---
