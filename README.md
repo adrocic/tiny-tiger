@@ -56,10 +56,34 @@ tiny-tiger/
 
 Install Emscripten first: https://emscripten.org/docs/getting_started/downloads.html
 
-Emscripten Setup
+### Emscripten Setup
 Emscripten is installed via emsdk but not added to system/user environment variables permanently, to avoid conflicts with NVM and system Python.
 Instead, activate it on demand per terminal session.
-Activation
+
+What is Emscripten?
+Normally, C++ code is compiled into machine code. That works great for native apps, but browsers can't run machine code; they have their own sandboxed runtime.
+WebAssembly (WASM) is a binary format that browsers can run, it's fast, low-level, and language-agnostic. It's just machine code for the browser.
+Emscripten is the compiler toolchain that bridges the gap. It takes our C++ source code and, instead of compiling it to native machine code, compiles it to WebAssembly. It also handles the glue work, generating the JavaScript needed to load, instantiate, and communicate with the WASM module in the browser.
+
+### Activation
+
+```
+git clone https://github.com/emscripten-core/emsdk.git
+# Enter that directory
+cd emsdk
+Note
+
+You can also get the emsdk without git, by selecting “Clone or download => Download ZIP” on the emsdk GitHub page.
+
+Run the following emsdk commands to get the latest tools from GitHub and set them as active:
+
+# Fetch the latest version of the emsdk (not needed the first time you clone)
+git pull
+
+# Download and install the latest SDK tools.
+./emsdk install latest
+```
+
 Add the following to your PowerShell profile (notepad $PROFILE):
 ```
 powershellfunction Invoke-BatchFile {
